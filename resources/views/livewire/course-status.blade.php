@@ -1,154 +1,145 @@
-@push('css')
-    <link rel="stylesheet" href="https://cdn.plyr.io/3.6.8/plyr.css" />
-@endpush
+<div class="min-h-screen bg-gray-50 py-8">
+    @php
+        $colorPrimary = 'rgb(38,186,165)';
+        $colorSecondary = 'rgb(55,95,122)';
+    @endphp
 
-<div class="py-8">
-    <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-8"
-        x-data="{current_id: @entangle('current_id')}">
+    <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        <div class="lg:col-span-2">
-            
-            <div class="relative">
-                <div wire:ignore x-data="{player: null, video: @entangle('video_url')}" 
-                x-init="player = new Plyr($refs.player, {ratio: '16:9'});
-
-                    player.source = {
-                        type: 'video',
-                        title: 'Example title',
-                        sources: [
-                            {
-                                src: video,
-                                type: 'video/mp4',
-                            }
-                        ],
-                        poster: 'https://cdn.pixabay.com/photo/2022/01/09/21/35/21-35-10-530_960_720.png'
-                    };
-                    
-                    $watch('video', value => {
-                        player.source = {
-                            type: 'video',
-                            title: 'Example title',
-                            sources: [
-                                {
-                                    src: value,
-                                    type: 'video/mp4',
-                                }
-                            ],
-                            poster: 'https://cdn.pixabay.com/photo/2022/01/09/21/35/21-35-10-530_960_720.png'
-                        };
-                    })
-                ">
-                    
-                    <video playsinline controls x-ref="player">
-                    </video>
-
+        <div class="lg:col-span-2 space-y-5">
+            <section class="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 overflow-hidden">
+                <div class="bg-gray-900" style="aspect-ratio: 16 / 9;">
+                    @if ($this->video_provider === 'youtube' && $this->youtube_embed_url)
+                        <iframe
+                            class="w-full h-full"
+                            src="{{ $this->youtube_embed_url }}"
+                            title="Video de la leccion"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowfullscreen>
+                        </iframe>
+                    @elseif ($this->video_provider === 'local' && $video_url)
+                        <video class="w-full h-full" controls preload="metadata">
+                            <source src="{{ $video_url }}" type="video/mp4">
+                            Tu navegador no soporta la reproduccion de video.
+                        </video>
+                    @else
+                        <div class="w-full h-full flex flex-col items-center justify-center text-gray-200 px-6 text-center">
+                            <p class="text-lg font-semibold">No se pudo previsualizar este video</p>
+                            @if($video_url)
+                                <a href="{{ $video_url }}" target="_blank" rel="noopener" class="mt-3 inline-flex items-center rounded-lg px-4 py-2 text-sm font-bold text-white" style="background-color: {{ $colorPrimary }};">
+                                    Abrir video en una nueva pestana
+                                </a>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
-                {{-- Cargando --}}
-                <div wire:loading.flex
-                    class="absolute left-0 top-0 w-full h-full bg-black bg-opacity-25 items-center justify-center">
-                    <div class="w-14 h-14 border-4 border-dashed rounded-full animate-spin border-gray-400">
+                <div class="p-6">
+                    <h1 class="text-2xl font-bold" style="color: {{ $colorSecondary }};">{{ $this->current->name }}</h1>
+
+                    @if ($this->current->description)
+                        <p class="text-gray-600 mt-3">{{ $this->current->description->name }}</p>
+                    @endif
+
+                    @if ($this->current->resource)
+                        <button type="button" class="mt-4 inline-flex items-center rounded-lg border px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50" style="border-color: {{ $colorSecondary }};" wire:click="download">
+                            Descargar complemento
+                        </button>
+                    @endif
+
+                    <div class="mt-5">
+                        <x-toggle wire:model="active">
+                            Marcar esta unidad como culminada
+                        </x-toggle>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <h1 class="text-3xl text-gray-600 font-bold mt-4">
-                {{$this->current->name}}
-            </h1>
+            <section class="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 p-4 sm:p-5">
+                <div class="flex items-center justify-between gap-3">
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold {{ $this->previous ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }}"
+                        @if($this->previous) wire:click="$set('current_id', {{ $this->previous->id }})" @else disabled @endif>
+                        Tema anterior
+                    </button>
 
-            @if ($this->current->resource)
-                <div class="flex justify-end text-gray-600 cursor-pointer" wire:click="download">
-                    <i class="fas fa-download text-lg"></i>
-                    <p class="text-sm ml-2">Descargar Complemento</p>
+                    <button
+                        type="button"
+                        class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold {{ $this->next ? 'text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed' }}"
+                        @if($this->next) style="background-color: {{ $colorPrimary }};" @endif
+                        @if($this->next) wire:click="$set('current_id', {{ $this->next->id }})" @else disabled @endif>
+                        Siguiente tema
+                    </button>
                 </div>
-            @endif
-
-            @if ($this->current->description)
-                <div class="text-gray-600 mt-4 mb-4">
-                    {{$this->current->description->name}}
-                </div>
-            @endif
-
-            <x-toggle wire:model="active">
-                Marcar esta unidad como culminada
-            </x-toggle>
-
-            
-
-            {{-- {{$this->previous->id}}
-            <hr>
-            {{$this->next->id}} --}}
-
-            <div class="card mt-2">
-                <div class="card-body flex text-gray-500 font-bold">
-                    
-                    @if ($this->previous)
-                        <a wire:click="$set('current_id', {{$this->previous ? $this->previous->id : null}})" class="cursor-pointer">Tema anterior</a>
-                    @endif
-
-                    @if ($this->next)
-                        <a wire:click="$set('current_id', {{$this->next ? $this->next->id : null}})" class="ml-auto cursor-pointer">Siguiente tema</a>
-                    @endif
-                </div>
-            </div>
-
+            </section>
         </div>
-    
+
         <div>
-            <div class="card">
-                <div class="px-6 py-4">
-                    <h1 class="text-2xl leading-8 text-center mb-4">{{$course->title}}</h1>
+            <div class="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 p-6 lg:sticky lg:top-6">
+                <h2 class="text-2xl font-bold text-center" style="color: {{ $colorSecondary }};">{{ $course->title }}</h2>
 
-                    <div class="flex items-center">
-                        <figure>
-                            <img class="w-12 h-12 object-cover rounded-full mr-4" src="{{$course->teacher->profile_photo_url}}" alt="">
-                        </figure>
+                @php
+                    $teacher = $course->teacher;
+                    $fallbackPhoto = asset('img/sinimagen.png');
+                    $teacherPhoto = $teacher ? $teacher->profile_photo_url : $fallbackPhoto;
+                @endphp
 
+                <div class="mt-5 flex items-center">
+                    <img
+                        class="w-12 h-12 rounded-full object-cover"
+                        src="{{ $teacherPhoto }}"
+                        alt="{{ $teacher ? $teacher->name : 'Docente' }}"
+                        onerror="this.onerror=null;this.src='{{ $fallbackPhoto }}';">
+
+                    <div class="ml-3">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Instructor</p>
+                        <p class="font-semibold" style="color: {{ $colorSecondary }};">{{ $teacher ? $teacher->name : 'Docente no disponible' }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <div class="flex items-center justify-between text-sm">
+                        <p class="font-semibold text-gray-600">Progreso</p>
+                        <p class="font-bold" style="color: {{ $colorPrimary }};">{{ $this->advance . '%' }}</p>
+                    </div>
+                    <div class="mt-2 h-2 rounded-full bg-gray-200 overflow-hidden">
+                        <div class="h-full transition-all duration-500" style="width: {{ $this->advance . '%' }}; background-color: {{ $colorPrimary }};"></div>
+                    </div>
+                </div>
+
+                <div class="mt-6 space-y-5 max-h-[60vh] overflow-auto pr-1">
+                    @foreach ($course->sections as $section)
                         <div>
-                            <p>{{$course->teacher->name}}</p>
-                        </div>
-                    </div>
+                            <h3 class="text-sm font-bold uppercase tracking-wide mb-2" style="color: {{ $colorSecondary }};">{{ $section->name }}</h3>
 
-                    <p class="text-gray-400 text-sm mt-2">{{$this->advance . '%'}} Completado</p>
-
-                    <div class="relative pt-1">
-                        <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-teal-200">
-                            <div style="width:{{$this->advance . '%'}}" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-teal-400 transition-all duration-500"></div>
-                        </div>
-                    </div>
-                    <ul>
-                        @foreach ($course->sections as $section)
-                            <li class="text-gray-600 mb-4">
-                                <a class="font-bold text-base inline-block mb-2" href="">{{$section->name}}</a>
-                                <ul class="space-y-1">
-                                    @foreach ($section->lessons as $lesson)
-                                        <li>
-                                            <a class="flex w-full cursor-pointer"
-                                                x-on:click="current_id = {{ $lesson->id }}">
-                                                <span class="inline-block w-5 h-5 rounded-full mt-0.5 mr-2"
-                                                    x-bind:class="{{ $lesson->id }} == current_id ? 
-                                                        'border-4 ' + '{{ $lesson->completed ? 'border-teal-300' : 'border-gray-400' }}' : 
-                                                        '{{ $lesson->completed ? 'bg-teal-300' : 'bg-gray-400' }}'">
+                            <ul class="space-y-1.5">
+                                @foreach ($section->lessons as $lesson)
+                                    @php
+                                        $isCurrent = $lesson->id === $current_id;
+                                    @endphp
+                                    <li>
+                                        <button
+                                            type="button"
+                                            wire:click="$set('current_id', {{ $lesson->id }})"
+                                            class="w-full text-left rounded-lg px-3 py-2 transition {{ $isCurrent ? '' : 'hover:bg-gray-50' }}"
+                                            @if($isCurrent) style="background-color: rgba(38,186,165,0.12); border: 1px solid rgba(38,186,165,0.35);" @endif>
+                                            <span class="flex items-start">
+                                                <span
+                                                    class="mt-1 mr-2 inline-block w-2.5 h-2.5 rounded-full"
+                                                    style="background-color: {{ $lesson->completed ? $colorPrimary : ($isCurrent ? $colorSecondary : '#D1D5DB') }};">
                                                 </span>
-
-                                                <span class="inline-block flex-1 text-left">
-                                                    {{ $lesson->name }}
-                                                </span>
-                                                
-                                            </a>
-                                        </li>
-                                    
-                                    @endforeach
-                                </ul>
-                            </li>
-                        @endforeach
-                    </ul>
+                                                <span class="text-sm {{ $isCurrent ? 'font-semibold' : 'text-gray-700' }}" @if($isCurrent) style="color: {{ $colorSecondary }};" @endif>{{ $lesson->name }}</span>
+                                            </span>
+                                        </button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-@push('js')
-    <script src="https://cdn.plyr.io/3.6.8/plyr.js"></script>
-@endpush

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\HomeController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\CoursePurchaseRequestController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\LevelController;
 use App\Http\Controllers\Admin\PriceController;
@@ -34,3 +35,15 @@ Route::post('courses/{course}/approved', [CourseController::class, 'approved'])-
 Route::get('courses/{course}/observation', [CourseController::class, 'observation'])->name('courses.observation');
 
 Route::post('courses/{course}/reject', [CourseController::class, 'reject'])->name('courses.reject');
+
+Route::get('course-purchase-requests', [CoursePurchaseRequestController::class, 'index'])
+    ->middleware('can:admin.courses')
+    ->name('course-purchase-requests.index');
+
+Route::post('course-purchase-requests/{purchaseRequest}/approve', [CoursePurchaseRequestController::class, 'approve'])
+    ->middleware('can:admin.courses')
+    ->name('course-purchase-requests.approve');
+
+Route::post('course-purchase-requests/{purchaseRequest}/reject', [CoursePurchaseRequestController::class, 'reject'])
+    ->middleware('can:admin.courses')
+    ->name('course-purchase-requests.reject');

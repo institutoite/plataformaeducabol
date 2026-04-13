@@ -16,16 +16,21 @@ class UserSeeder extends Seeder
     public function run()
     {
         
-        User::create([
-            'name' => 'David',
-            'email' => 'informaciones.ite@gmail.com',
-            'password' => bcrypt('emanuel1326*')
-        ]);
-        User::create([
-            'name' => 'Edward Carrillo Portillo',
-            'email' => 'eduardcp20@gmail.com',
-            'password' => bcrypt('11387469')
-        ]);
+        User::updateOrCreate(
+            ['email' => 'informaciones.ite@gmail.com'],
+            [
+                'name' => 'David',
+                'password' => bcrypt('emanuel1326*')
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'eduardcp20@gmail.com'],
+            [
+                'name' => 'Edward Carrillo Portillo',
+                'password' => bcrypt('11387469')
+            ]
+        );
 
         //User::factory(99)->create();
     }

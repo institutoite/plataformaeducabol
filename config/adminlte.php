@@ -268,6 +268,13 @@ return [
         ],
 
         [
+            'text' => 'Solicitudes de compra',
+            'route'  => 'admin.course-purchase-requests.index',
+            'icon' => 'fa fa-check',
+            'can' => 'admin.courses',
+        ],
+
+        [
             'text' => 'Cursos para aprobar',
             'route'  => 'admin.courses.index',
             'icon' => 'fa fa-list',

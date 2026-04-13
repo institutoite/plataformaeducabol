@@ -96,4 +96,9 @@ class User extends Authenticatable
     public function lessons(){
         return $this->belongsToMany('App\Models\Lesson');
     }
+
+    public function coursePurchaseRequests()
+    {
+        return $this->hasMany('App\Models\CoursePurchaseRequest');
+    }
 }

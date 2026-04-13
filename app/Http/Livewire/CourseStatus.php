@@ -7,6 +7,7 @@ use Livewire\Component;
 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CourseStatus extends Component
 {
@@ -17,7 +18,10 @@ class CourseStatus extends Component
     public $video_url, $active;
 
     public function mount(Course $course){
+        $this->authorize('enrolled', $course);
+
         $this->course = $course;
+        $current = null;
         
         foreach ($course->lessons as $lesson) {
             if (!$lesson->completed) {
@@ -31,12 +35,14 @@ class CourseStatus extends Component
             $current = $course->lessons->last();
         }
 
+        if (!$current) {
+            abort(404, 'Este curso no tiene lecciones disponibles.');
+        }
+
 
         $this->current_id = $current->id;
-        $this->video_url = Storage::url($this->current->url);
+        $this->video_url = $this->resolveVideoUrl($this->current->url);
         $this->active = $current->completed;
-
-        $this->authorize('enrolled', $course);
     }
 
     
@@ -52,8 +58,47 @@ class CourseStatus extends Component
 
     //Ciclo de vida
     public function updatedCurrentId(){
-        $this->video_url = Storage::url($this->current->url);
+        $this->video_url = $this->resolveVideoUrl($this->current->url);
         $this->active = $this->current->completed;
+    }
+
+    protected function resolveVideoUrl($url){
+        if (Str::startsWith($url, ['http://', 'https://'])) {
+            return $url;
+        }
+
+        return Storage::url($url);
+    }
+
+    public function getVideoProviderProperty(){
+        if (!$this->video_url) {
+            return null;
+        }
+
+        if (Str::contains($this->video_url, ['youtube.com', 'youtu.be'])) {
+            return 'youtube';
+        }
+
+        return 'local';
+    }
+
+    public function getYoutubeEmbedUrlProperty(){
+        if ($this->video_provider !== 'youtube') {
+            return null;
+        }
+
+        $url = trim($this->video_url);
+        $videoId = null;
+
+        if (preg_match('/youtu\.be\/([A-Za-z0-9_-]{6,})/i', $url, $matches)) {
+            $videoId = $matches[1];
+        } elseif (preg_match('/[?&]v=([A-Za-z0-9_-]{6,})/i', $url, $matches)) {
+            $videoId = $matches[1];
+        } elseif (preg_match('/youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/i', $url, $matches)) {
+            $videoId = $matches[1];
+        }
+
+        return $videoId ? 'https://www.youtube.com/embed/' . $videoId . '?rel=0&modestbranding=1' : null;
     }
 
     public function updatedActive(){

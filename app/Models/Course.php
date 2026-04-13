@@ -94,6 +94,11 @@ class Course extends Model
         return $this->belongsToMany('App\Models\User');
     }
 
+    public function purchaseRequests()
+    {
+        return $this->hasMany('App\Models\CoursePurchaseRequest');
+    }
+
     //Relacion uno a uno polimorfica
 
     public function image(){

@@ -78,6 +78,12 @@
         <div class="order-1 lg:order-2">
             <section class="bg-white shadow-lg rounded overflow-hidden mb-4">
                 <div class="px-6 py-4">
+                    @if (session('info'))
+                        <div class="mb-3 text-sm text-green-700 bg-green-100 border border-green-200 rounded px-3 py-2">
+                            {{ session('info') }}
+                        </div>
+                    @endif
+
                     <div class="flex items-center">
                         <img class="h-12 w-12 object-cover rounded-full shadow-lg" src="{{$course->teacher->profile_photo_url}}" alt="{{$course->teacher->name}}">
                         <div class="ml-4">
@@ -91,7 +97,24 @@
 
                     @else
                         <p class="text-center">Bs. {{$course->price->value}}</p>
-                        <a class="block text-center w-full mt-4 btn btn-ite text-white font-bold py-2 px-4 rounded" href="https://api.whatsapp.com/send?phone=59171039910&text=Hola, me interesa comprar el curso {{ $course->title }} ">Comprar este curso</a>
+                        @auth
+                            @if ($hasPendingPurchaseRequest)
+                                <span class="block text-center w-full mt-4 bg-yellow-500 text-white font-bold py-2 px-4 rounded cursor-not-allowed">
+                                    Pendiente de aprobacion
+                                </span>
+                            @else
+                                <form action="{{ route('courses.purchase-request', $course) }}" method="POST" class="mt-4">
+                                    @csrf
+                                    <button class="block text-center w-full btn btn-ite text-white font-bold py-2 px-4 rounded" type="submit">
+                                        Comprar este curso
+                                    </button>
+                                </form>
+                            @endif
+                        @else
+                            <a class="block text-center w-full mt-4 btn btn-ite text-white font-bold py-2 px-4 rounded" href="{{ route('login') }}">
+                                Inicia sesion para comprar
+                            </a>
+                        @endauth
                     @endcan
 
                 </div>

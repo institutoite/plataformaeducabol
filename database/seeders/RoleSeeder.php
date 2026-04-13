@@ -16,25 +16,29 @@ class RoleSeeder extends Seeder
      */
     public function run()
     {
-        $admin= Role::create(['name' => 'Admin']);
-        $teacher= Role::create(['name' => 'Teacher']);
-        $student= Role::create(['name' => 'Student']);
+        $adminRole = Role::findOrCreate('Admin', 'web');
+        $teacherRole = Role::findOrCreate('Teacher', 'web');
+        $studentRole = Role::findOrCreate('Student', 'web');
 
-        Permission::create(['name' => 'admin.categories'])->assignRole($admin);
-        Permission::create(['name' => 'admin.leves'])->assignRole($admin);
-        Permission::create(['name' => 'admin.prices'])->assignRole($admin);
-        Permission::create(['name' => 'admin.courses'])->assignRole($admin);
+        Permission::findOrCreate('admin.categories', 'web')->assignRole($adminRole);
+        Permission::findOrCreate('admin.leves', 'web')->assignRole($adminRole);
+        Permission::findOrCreate('admin.prices', 'web')->assignRole($adminRole);
+        Permission::findOrCreate('admin.courses', 'web')->assignRole($adminRole);
         
-        Permission::create(['name' => 'instructor.courses'])->syncRoles([$admin, $teacher]);
-        Permission::create(['name' => 'instructor.courses.curriculum'])->syncRoles([$admin, $teacher]);
-        Permission::create(['name' => 'instructor.courses.goals'])->syncRoles([$admin, $teacher]);
-        Permission::create(['name' => 'instructor.courses.students'])->syncRoles([$admin, $teacher]);
-        Permission::create(['name' => 'instructor.courses.observation'])->syncRoles([$admin, $teacher]);
+        Permission::findOrCreate('instructor.courses', 'web')->syncRoles([$adminRole, $teacherRole]);
+        Permission::findOrCreate('instructor.courses.curriculum', 'web')->syncRoles([$adminRole, $teacherRole]);
+        Permission::findOrCreate('instructor.courses.goals', 'web')->syncRoles([$adminRole, $teacherRole]);
+        Permission::findOrCreate('instructor.courses.students', 'web')->syncRoles([$adminRole, $teacherRole]);
+        Permission::findOrCreate('instructor.courses.observation', 'web')->syncRoles([$adminRole, $teacherRole]);
 
-        $admin = User::find(1); 
-        $admin->assignRole('Admin');
+        $adminUser = User::find(1); 
+        if ($adminUser) {
+            $adminUser->assignRole($adminRole);
+        }
 
-        $admin = User::find(2); 
-        $admin->assignRole('Admin');
+        $secondaryAdminUser = User::find(2); 
+        if ($secondaryAdminUser) {
+            $secondaryAdminUser->assignRole($adminRole);
+        }
     }
 }
